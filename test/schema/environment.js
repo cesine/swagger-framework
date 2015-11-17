@@ -185,5 +185,17 @@ describe('Environment', function() {
         }
       ]);
     });
+
+    it('should use default', function() {
+      var schema = {
+        type: 'object',
+        properties: { one: { type: 'integer', defaultValue: 1 } },
+      };
+      var data = { };
+
+      this.env.validateThrow(schema, data, { useDefault: true });
+
+      data.one.should.equal(1);
+    });
   });
 });
