@@ -310,7 +310,6 @@
                             ],
                             "name": "status",
                             "paramType": "query",
-                            "required": true,
                             "type": "string"
                         }
                     ],
