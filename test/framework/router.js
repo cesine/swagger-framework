@@ -149,6 +149,8 @@ describe('FrameworkRouter', function() {
           query: query,
         });
 
+        res.body.progress.should.eql(['connected', 'validated', 'completed']);
+
         done();
       });
   });

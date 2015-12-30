@@ -21,6 +21,7 @@ describe('index', function() {
 
       self.statusCode = 200;
       self.body = { hello: 'world' };
+      self.resBody = '';
 
       self.sf = {};
 
@@ -33,6 +34,10 @@ describe('index', function() {
       self.res = {
         sf: self.sf,
         _headers: {},
+        write: function(content) {
+          self.resBody = self.resBody + content;
+          self.res.headersSent = true;
+        }
       };
 
       self.res.getHeader = function(name) {
@@ -54,7 +59,7 @@ describe('index', function() {
         var reply = http.reply(self.req, self.res, self.opts);
 
         self.res.end = function(body) {
-          self.resBody = body;
+          self.res.write(body);
 
           callback();
         };
@@ -145,6 +150,70 @@ describe('index', function() {
 
         self.res._headers.should.have.property('content-type');
         self.res._headers['content-type'].should.eql(expectedType);
+
+        done();
+      });
+    });
+
+    it('should trigger progress events if available', function(done) {
+      var self = this;
+
+      self.res.sf = {
+        progress: ['mocked'],
+        progressStarted: true,
+        updateProgress: function(message) {
+          self.res.sf.progress.push(message);
+          self.res.write(', "' + message + '"');
+        },
+      };
+
+      // Siumulate a write progress was called
+      self.res.setHeader('content-type', 'application/json; charset=utf8');
+      self.res.write('{"progress": ' +
+            JSON.stringify(self.res.sf.progress).replace(/]$/, ''));
+
+      self.run(function() {
+        self.res._headers.should.not.have.property('content-length');
+
+        self.res._headers.should.have.property('content-type');
+        self.res._headers['content-type'].should.eql(
+          'application/json; charset=utf8');
+
+        self.resBody.should.equal(
+          '{"progress": ["mocked", "completed"], "hello":"world"}');
+
+        self.res.sf.progress.length.should.equal(2);
+        self.res.sf.progress[0].should.equal('mocked');
+        self.res.sf.progress[1].should.equal('completed');
+
+        done();
+      });
+    });
+
+    it('should ignore progress if not started', function(done) {
+      var self = this;
+
+      self.res.sf = {
+        progress: ['mocked'],
+        updateProgress: function(message) {
+          self.res.sf.progress.push(message);
+        },
+      };
+
+      self.run(function() {
+        self.res._headers.should.have.property('content-length');
+        self.res._headers['content-length'].should.eql(17);
+
+        self.res._headers.should.have.property('content-type');
+        self.res._headers['content-type'].should.eql(
+          'application/json; charset=utf8');
+
+        self.resBody.should.equal(
+          '{"hello":"world"}');
+
+        self.res.sf.progress.length.should.equal(2);
+        self.res.sf.progress[0].should.equal('mocked');
+        self.res.sf.progress[1].should.equal('completed');
 
         done();
       });
