@@ -205,6 +205,24 @@ describe('FrameworkRouter', function() {
       });
   });
 
+  it('should support allowMultiple with defaults', function(done) {
+    var query = { status: ['available'] };
+
+    this.request
+      .get('/pet/findByStatus')
+      .expect('Content-Type', /json/)
+      .expect(200)
+      .end(function(err, res) {
+        if (err) throw err;
+        console.log(err, res.body);
+        res.body.request.should.eql({
+          query: query,
+        });
+
+        done();
+      });
+  });
+
   it('should accept multiple query parameters', function(done) {
     var query = { tag: ['one', 'two'] };
 
