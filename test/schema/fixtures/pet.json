@@ -301,6 +301,7 @@
                     "notes": "Multiple status values can be provided with comma seperated strings",
                     "parameters": [
                         {
+                            "allowMultiple": true,
                             "defaultValue": "available",
                             "description": "Status values that need to be considered for filter",
                             "enum": [
